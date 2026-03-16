@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>童声语音系统 Demo</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --subtext: #6b7280;
+      --line: #e5e7eb;
+      --head: #eef2ff;
+      --accent: #4f46e5;
+      --accent2: #7c3aed;
+      --source-col: #ecfdf5;
+      --target-col: #eff6ff;
+      --ours-col: #fff7ed;
+      --baseline-col: #fafafa;
+      --shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: linear-gradient(180deg, #f8fbff 0%, #f5f7fb 100%);
+      color: var(--text);
+    }
+
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 28px 18px 50px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      color: #fff;
+      padding: 30px 32px;
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+    }
+
+    .hero p {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.8;
+      color: rgba(255,255,255,0.92);
+    }
+
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 18px 0 26px;
+    }
+
+    .nav a {
+      text-decoration: none;
+      color: var(--accent);
+      background: white;
+      border: 1px solid #e8eafc;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+
+    .nav a:hover {
+      background: #eef2ff;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      border: 1px solid var(--line);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--subtext);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      display: inline-block;
+    }
+
+    .dot-source { background: #86efac; }
+    .dot-target { background: #93c5fd; }
+    .dot-ours { background: #fdba74; }
+
+    .section-card {
+      background: var(--card);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 30px;
+      border: 1px solid #edf1f7;
+    }
+
+    .section-header {
+      padding: 22px 24px 16px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #fafbff 100%);
+    }
+
+    .section-header h2 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      color: var(--text);
+    }
+
+    .section-header p {
+      margin: 0;
+      color: var(--subtext);
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      max-height: 78vh;
+    }
+
+    table {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 14px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: var(--head);
+      color: #312e81;
+      font-weight: 700;
+      border-bottom: 1px solid var(--line);
+      text-align: center;
+    }
+
+    th, td {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 12px;
+      text-align: center;
+      vertical-align: middle;
+      background: #fff;
+    }
+
+    tbody tr:nth-child(even) td {
+      background: #fcfdff;
+    }
+
+    tbody tr:hover td {
+      background: #f9fbff;
+    }
+
+    th:first-child, td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      background: #fff;
+      min-width: 300px;
+      max-width: 340px;
+      text-align: left;
+    }
+
+    thead th:first-child {
+      z-index: 5;
+      background: var(--head);
+    }
+
+    .text-cell {
+      font-weight: 600;
+      line-height: 1.75;
+      color: #111827;
+      word-break: break-word;
+    }
+
+    .col-source {
+      background: var(--source-col) !important;
+    }
+
+    .col-target {
+      background: var(--target-col) !important;
+    }
+
+    .col-ours {
+      background: var(--ours-col) !important;
+    }
+
+    .model-name {
+      white-space: nowrap;
+      min-width: 160px;
+    }
+
+    audio {
+      width: 180px;
+      height: 36px;
+    }
+
+    .footer-note {
+      margin-top: 8px;
+      padding: 0 2px;
+      color: var(--subtext);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 26px;
+      }
+
+      .container {
+        padding: 18px 10px 36px;
+      }
+
+      th:first-child, td:first-child {
+        min-width: 220px;
+        max-width: 240px;
+      }
+
+      audio {
+        width: 150px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <h1>童声语音系统 Demo</h1>
+      <p>
+        本页面展示童声语音系统的两个核心任务：音色转换 / 变声器，以及语音合成大模型。
+        每一行对应同一条测试样本，每一列对应不同系统输出，便于从内容准确性、音色相似度、
+        童声风格和自然度等角度进行横向试听对比。
+      </p>
+    </section>
+
+    <div class="nav">
+      <a href="#vc-demo">音色转换 / 变声器</a>
+      <a href="#tts-demo">语音合成大模型</a>
+    </div>
+
+    <div class="legend">
+      <span class="tag"><span class="dot dot-source"></span> 原音频 / 输入参考</span>
+      <span class="tag"><span class="dot dot-target"></span> 目标音频 / 目标音色</span>
+      <span class="tag"><span class="dot dot-ours"></span> 我们的方法</span>
+    </div>
+
+    <!-- 音色转换 -->
+    <section class="section-card" id="vc-demo">
+      <div class="section-header">
+        <h2>音色转换 / 变声器</h2>
+        <p>
+          任务目标：在保留原始语义内容的前提下，将成人源语音转换为目标童声音色。
+          建议优先对比“原音频 → 目标音频 → 基线模型 → 我们的方法”。
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>原文</th>
+              <th class="model-name col-source">原音频</th>
+              <th class="model-name col-target">目标音频</th>
+              <th class="model-name">freevc</th>
+              <th class="model-name">dddm-vc</th>
+              <th class="model-name">meanvc</th>
+              <th class="model-name">seedvc</th>
+              <th class="model-name">cosyvoice</th>
+              <th class="model-name">cosyvoice2-ft</th>
+              <th class="model-name">cosyvoice3</th>
+              <th class="model-name col-ours">cosyvoice3-ft</th>
+              <th class="model-name col-ours">our-vc</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-cell">有男子跳远女子撑杆跳甚至男子一百米</td>
+              <td class="col-source"><audio controls><source src="./demos/source/SSB08710145.wav" type="audio/wav"></audio></td>
+              <td class="col-target"><audio controls><source src="./demos/target/002_5_M_L_ZIBO_Android_016.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/freevc/00000002.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/dddm-vc/00000002.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/meanvc/00000002.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/seedvc/00000002.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice/00000002.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2-ft/00000002.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice3/00000002.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice3-ft/00000002.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-vc/00000002.wav" type="audio/wav"></audio></td>
+            </tr>
+            <tr>
+              <td class="text-cell">父母下楼倒垃圾二岁女童从三零楼坠落身亡</td>
+              <td class="col-source"><audio controls><source src="./demos/source/SSB11350306.wav" type="audio/wav"></audio></td>
+              <td class="col-target"><audio controls><source src="./demos/target/404_5_M_L_SUZHOU_IPHONE_001_126.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/freevc/00000005.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/dddm-vc/00000005.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/meanvc/00000005.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/seedvc/00000005.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice/00000005.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2-ft/00000005.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice3/00000005.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice3-ft/00000005.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-vc/00000005.wav" type="audio/wav"></audio></td>
+            </tr>
+            <tr>
+              <td class="text-cell">总和生育率保持在二点五个上下波动</td>
+              <td class="col-source"><audio controls><source src="./demos/source/SSB18060011.wav" type="audio/wav"></audio></td>
+              <td class="col-target"><audio controls><source src="./demos/target/154_4_M_L_CHENGDU_Android_072.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/freevc/00000021.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/dddm-vc/00000021.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/meanvc/00000021.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/seedvc/00000021.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice/00000021.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2-ft/00000021.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice3/00000021.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice3-ft/00000021.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-vc/00000021.wav" type="audio/wav"></audio></td>
+            </tr>
+            <tr>
+              <td class="text-cell">太空互联网项目可以带来快速廉价的互联网连接</td>
+              <td class="col-source"><audio controls><source src="./demos/source/SSB10020420.wav" type="audio/wav"></audio></td>
+              <td class="col-target"><audio controls><source src="./demos/target/191_5_F_L_NANJING_IPHONE_001_093.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/freevc/00000023.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/dddm-vc/00000023.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/meanvc/00000023.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/seedvc/00000023.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice/00000023.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2-ft/00000023.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice3/00000023.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice3-ft/00000023.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-vc/00000023.wav" type="audio/wav"></audio></td>
+            </tr>
+            <tr>
+              <td class="text-cell">她一直等到他们远离了华盛顿周六晚上的车水马龙</td>
+              <td class="col-source"><audio controls><source src="./demos/source/SSB13020409.wav" type="audio/wav"></audio></td>
+              <td class="col-target"><audio controls><source src="./demos/target/168_4_M_L_SUZHOU_IPHONE_001_124.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/freevc/00000031.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/dddm-vc/00000031.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/meanvc/00000031.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/seedvc/00000031.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice/00000031.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2-ft/00000031.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice3/00000031.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice3-ft/00000031.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-vc/00000031.wav" type="audio/wav"></audio></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 语音合成大模型 -->
+    <section class="section-card" id="tts-demo">
+      <div class="section-header">
+        <h2>语音合成大模型</h2>
+        <p>
+          任务目标：给定文本与目标音色，合成目标童声音频。
+          建议重点关注内容可懂度、音色相似度、童声风格。
+        </p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>合成文本</th>
+              <th class="model-name col-target">目标音色</th>
+              <th class="model-name">indextts2</th>
+              <th class="model-name">fireredtts2</th>
+              <th class="model-name">sparktts</th>
+              <th class="model-name">fish-speech</th>
+              <th class="model-name">cosyvoice2-base</th>
+              <th class="model-name">cosyvoice2_ftc</th>
+              <th class="model-name">cs3</th>
+              <th class="model-name">cs3-ftc</th>
+              <th class="model-name">cs3-ltp-c</th>
+              <th class="model-name col-ours">our-norm_style</th>
+              <th class="model-name col-ours">our-child_style</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="text-cell">粉丝们对鹿晗这样的本土小鲜肉更感兴趣</td>
+              <td class="col-target"><audio controls><source src="./demos/target/128_4_F_L_LIAOCHENG_iPhone_097.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/indextts2/00000074.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/fireredtts2/00000074.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/sparktts/00000074.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/fish-speech/00000074.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2-base/00000074.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2_ftc/00000074.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3/00000074.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3-ftc/00000074.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3-ltp-c/00000074.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-norm_style/00000074.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-child_style/00000074.wav" type="audio/wav"></audio></td>
+            </tr>
+            <tr>
+              <td class="text-cell">其中还包括二十二点五亿美元的四十年期债券</td>
+              <td class="col-target"><audio controls><source src="./demos/target/191_5_F_L_NANJING_IPHONE_001_049.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/indextts2/00000078.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/fireredtts2/00000078.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/sparktts/00000078.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/fish-speech/00000078.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2-base/00000078.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2_ftc/00000078.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3/00000078.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3-ftc/00000078.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3-ltp-c/00000078.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-norm_style/00000078.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-child_style/00000078.wav" type="audio/wav"></audio></td>
+            </tr>
+            <tr>
+              <td class="text-cell">需要支付的中介费为房屋总价款的百分之二</td>
+              <td class="col-target"><audio controls><source src="./demos/target/247_5_F_L_CHANGSHA_Android_060.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/indextts2/00000084.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/fireredtts2/00000084.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/sparktts/00000084.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/fish-speech/00000084.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2-base/00000084.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2_ftc/00000084.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3/00000084.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3-ftc/00000084.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3-ltp-c/00000084.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-norm_style/00000084.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-child_style/00000084.wav" type="audio/wav"></audio></td>
+            </tr>
+            <tr>
+              <td class="text-cell">三星仍然是全球第一大智能手机供应商</td>
+              <td class="col-target"><audio controls><source src="./demos/target/404_5_M_L_SUZHOU_IPHONE_001_130.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/indextts2/00000085.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/fireredtts2/00000085.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/sparktts/00000085.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/fish-speech/00000085.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2-base/00000085.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2_ftc/00000085.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3/00000085.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3-ftc/00000085.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3-ltp-c/00000085.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-norm_style/00000085.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-child_style/00000085.wav" type="audio/wav"></audio></td>
+            </tr>
+            <tr>
+              <td class="text-cell">完善发行上市并购重组分红退市等规则体系</td>
+              <td class="col-target"><audio controls><source src="./demos/target/128_4_F_L_LIAOCHENG_iPhone_041.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/indextts2/00000092.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/fireredtts2/00000092.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/sparktts/00000092.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/fish-speech/00000092.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2-base/00000092.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cosyvoice2_ftc/00000092.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3/00000092.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3-ftc/00000092.wav" type="audio/wav"></audio></td>
+              <td><audio controls><source src="./demos/cs3-ltp-c/00000092.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-norm_style/00000092.wav" type="audio/wav"></audio></td>
+              <td class="col-ours"><audio controls><source src="./demos/our-child_style/00000092.wav" type="audio/wav"></audio></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="footer-note">
+      说明：当前页面采用横向滚动表格来承载大量系统结果；在 PC 端建议使用鼠标拖动或滚轮进行滚动，移动端则可直接滑动表格进行浏览。
+    </div>
+  </div>
+</body>
+</html>
